@@ -17,6 +17,18 @@ class Quran(commands.Cog):
         self.accent_color = discord.Color(0x1624)
         self.confirmation_color = discord.Color.green()
         self.error_color = discord.Color.red()
+        self.translation_mapping = {
+            'bengali' : 'bn.bengali',
+            'english': 'en.sahih',
+            'farsi' : 'fa.ghomshei',
+            'hindi' : 'hi.farooq',
+            'italian' : 'it.piccardo',
+            'japanese' : 'ja.japanese',
+            'malaysian' : 'my.ghazi',
+            'russian' : 'ru.kuliev-alsaadi',
+            'spanish' : 'es.garcia',
+            'urdu': 'ur.jalandhry',
+        }
 
     @discord.app_commands.command(name="quran", description="Sends Verse from the Quran.")
     @discord.app_commands.describe(verse="Enter the chapter and verse number (e.g. 1:1)")
@@ -56,31 +68,20 @@ class Quran(commands.Cog):
             await interaction.response.send_message(embed = error_embed)
         
     @discord.app_commands.command(name = "settranslation", description = "Set Translation for Quran Verse")
-    @discord.app_commands.describe(title = "Enter the name of translation (e.g. urdu, english, filipino)")
+    @discord.app_commands.describe(title = "Enter the name of translation bengali, farsi, hindi, italian, japanese, malaysian, russian, spanish, urdu")
+    @discord.app_commands.checks.has_permissions(administrator=True)
+    @discord.app_commands.guild_only()
     async def settranslation(self, interaction: discord.Interaction, title: str):
         server_id = interaction.guild_id
         current_time = datetime.datetime.now(self.timezone)
         
-        translation_mapping = {
-            'bengali' : 'bn.bengali',
-            'english': 'en.sahih',
-            'farsi' : 'fa.ghomshei',
-            'hindi' : 'hi.farooq',
-            'italian' : 'it.piccardo',
-            'japanese' : 'ja.japanese',
-            'malaysian' : 'my.ghazi',
-            'russian' : 'ru.kuliev-alsaadi',
-            'spanish' : 'es.garcia',
-            'urdu': 'ur.jalandhry',
-        }
-
-        if title.lower() not in translation_mapping:
-            set_translation_error_embed = discord.Embed(title="Error", description=f"Invalid translation. Please choose 'english', 'urdu', or 'filipino'", color=self.error_color, timestamp=current_time)
+        if title.lower() not in self.translation_mapping:
+            set_translation_error_embed = discord.Embed(title="Error", description=f"Invalid translation. Please choose from bengali, farsi, hindi, italian, japanese, malaysian, russian, spanish, urdu", color=self.error_color, timestamp=current_time)
             set_translation_error_embed.set_footer(text="Jazak Allah", icon_url=self.bot_avatar)
             await interaction.response.send_message(embed=set_translation_error_embed)
             return
 
-        translation_key = translation_mapping[title.lower()]
+        translation_key = self.translation_mapping[title.lower()]
         self.save_translation_to_db(server_id, translation_key)
 
         translation_language = title.capitalize()
@@ -97,10 +98,10 @@ class Quran(commands.Cog):
         server_id = interaction.guild_id if interaction.guild else None
         server_name = interaction.guild.name if interaction.guild else "this server"
         
-        translation_key = self.load_translation_from_db(server_id)
+        server_set_translation = self.load_translation_from_db(server_id)
 
-        if translation_key:
-            translation_language = translation_key.split("_")[0].capitalize()
+        if server_set_translation:
+            translation_language = server_set_translation
             translation_embed = discord.Embed(title="Current Translation", description=f"The current translation for `{server_name}` is set to {translation_language}", color=self.accent_color, timestamp=current_time)
         else:
             translation_embed = discord.Embed(title="Current Translation", description=f"No translation is set for `{server_name}`", color=self.error_color, timestamp=current_time)
@@ -110,10 +111,10 @@ class Quran(commands.Cog):
 
     def bring_verse(self, verse: int, server_id: int):
 
-        translation_key = self.load_translation_from_db(server_id)
+        server_set_translation = self.load_translation_from_db(server_id)
         current_time = datetime.datetime.now(self.timezone)
 
-        url = f'http://api.alquran.cloud/ayah/{verse}/editions/quran-uthmani,{translation_key}'
+        url = f'http://api.alquran.cloud/ayah/{verse}/editions/quran-uthmani,{server_set_translation}'
         print(f"At {current_time}, Invoked Random Quran Verse API URL: {url}") #for debugging
         response = requests.get(url)
         
