@@ -1,0 +1,8 @@
+config
+bin
+.vscode
+pyvenv.cfg
+lib
+lib64
+old-main.py
+include
