@@ -2,8 +2,9 @@ import discord
 import datetime
 import requests
 
-from data.db import DB
-from data.gui import set_timezone, bot_avatar, accent_color, confirmation_color, error_color, translation_mapping
+from utils.errors import error_handler
+from utils.db import DB
+from utils.gui import set_timezone, bot_avatar, accent_color, confirmation_color, error_color, translation_mapping
 from discord import app_commands
 from discord.ext import commands
 
@@ -64,7 +65,7 @@ class Quran(commands.Cog):
         current_time = datetime.datetime.now(self.timezone)
         
         if title.lower() not in self.translation_mapping:
-            set_translation_error_embed = discord.Embed(title="Error", description=f"Invalid translation. Please choose from bengali, farsi, hindi, italian, japanese, malaysian, russian, spanish, urdu", color=self.error_color, timestamp=current_time)
+            set_translation_error_embed = discord.Embed(title="Error", description=f"**Invalid translation!** Please choose from Bengali, English, Farsi, Hindi, Italian, Japanese, Malaysian, Russian, Spanish and Urdu", color=self.error_color, timestamp=current_time)
             set_translation_error_embed.set_footer(text="Jazak Allah", icon_url=self.bot_avatar)
             await interaction.response.send_message(embed=set_translation_error_embed)
             return
@@ -134,5 +135,11 @@ class Quran(commands.Cog):
             'sajda_info': sajda_info
             }
     
+    @quran.error
+    @settranslation.error
+    @translation.error
+    async def on_error(self, interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
+            await error_handler(interaction, error)
+
 async def setup(bot):
     await bot.add_cog(Quran(bot))

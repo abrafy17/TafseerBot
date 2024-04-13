@@ -4,8 +4,9 @@ import asyncio
 import random
 import datetime
 
-from data.db import DB
-from data.gui import set_timezone, bot_avatar, accent_color, confirmation_color, error_color, translation_mapping
+from utils.db import DB
+from utils.errors import error_handler
+from utils.gui import set_timezone, bot_avatar, accent_color, confirmation_color, error_color, translation_mapping
 from discord import app_commands
 from discord.ext import commands
 from cogs.quran import Quran
@@ -27,30 +28,29 @@ class DailyQuran(commands.Cog):
     @discord.app_commands.describe(hour="Hour in 24hr Format", minute="Minute")
     @discord.app_commands.checks.has_permissions(administrator=True)
     @discord.app_commands.guild_only()
-    async def set_rq_time(self, interaction: discord.Interaction, hour: int, minute: int):
+    async def set_dailyquran_time(self, interaction: discord.Interaction, hour: int, minute: int):
 
         server_id = interaction.guild_id
         current_time = datetime.datetime.now(self.timezone)
 
-
         try:
-            set_time = datetime.time(hour, minute)
-            time = set_time.strftime('%H:%M:00')
+                set_time = datetime.time(hour, minute)
+                time = set_time.strftime('%H:%M:00')
 
-            self.db.save_time_to_db(server_id, time)
-            embed = discord.Embed(title="Confirmation", description=f"The Daily Quran message time has been set to: {set_time.strftime('%I:%M %p')} ({self.timezone.zone})", color=self.confirmation_color, timestamp=current_time)
-            embed.set_footer(text="Jazak Allah", icon_url=self.bot_avatar)
-            await interaction.response.send_message(embed=embed)
+                self.db.save_time_to_db(server_id, time)
+                embed = discord.Embed(title="Confirmation", description=f"The Daily Quran Verse time has been set to: {set_time.strftime('%I:%M %p')}", color=self.confirmation_color, timestamp=current_time)
+                embed.set_footer(text="Jazak Allah", icon_url=self.bot_avatar)
+                await interaction.response.send_message(embed=embed)
         except ValueError:
-            embed = discord.Embed(title="Confirmation", description="Invalid time format. Please provide valid hour and minute values in 24hr format", color=self.error_color, timestamp=current_time)
-            embed.set_footer(text="Jazak Allah", icon_url=self.bot_avatar)
-            await interaction.response.send_message(embed=embed)
+                embed = discord.Embed(title="Confirmation", description="Invalid time format. Please provide valid hour and minute values in 24hr format", color=self.error_color, timestamp=current_time)
+                embed.set_footer(text="Jazak Allah", icon_url=self.bot_avatar)
+                await interaction.response.send_message(embed=embed)
 
-    @discord.app_commands.command(name="setdailyquranchannel", description="Set current channel to receive daily  verse")
+    @discord.app_commands.command(name="setdailyquranchannel", description="Set Current Channel for Receiving Daily Quran Verse")
     @discord.app_commands.describe()
     @discord.app_commands.checks.has_permissions(administrator=True)
     @discord.app_commands.guild_only()
-    async def add_dailyquran_channel(self, interaction: discord.Interaction):
+    async def set_dailyquran_channel(self, interaction: discord.Interaction):
 
         server_id = interaction.guild_id
         channel_id = interaction.channel_id
@@ -63,15 +63,15 @@ class DailyQuran(commands.Cog):
 
         if quran_channel is None:
             self.db.save_quran_channel_to_db(server_id, channel_id)
-            embed = discord.Embed(title="Confirmation", description=f"`{channel_name}` has been added to receive Daily Quran messages", color=self.confirmation_color, timestamp=current_time)
+            embed = discord.Embed(title="Confirmation", description=f"`{channel_name}` has been added to receive Daily Quran Verse", color=self.confirmation_color, timestamp=current_time)
             embed.set_footer(text="Jazak Allah", icon_url=self.bot_avatar)
             await interaction.response.send_message(embed=embed)
         else:
-            embed = discord.Embed(title="Error", description=f"`{channel_name}` is already set to receive Daily Quran messages", color=self.error_color, timestamp=current_time)
+            embed = discord.Embed(title="Error", description=f"`{channel_name}` is already set to receive Daily Quran Verse", color=self.error_color, timestamp=current_time)
             embed.set_footer(text="Jazak Allah", icon_url=self.bot_avatar)
             await interaction.response.send_message(embed=embed)
 
-    @discord.app_commands.command(name="rmdailyquranchannel", description=" Removes current channel from receiving daily verse")
+    @discord.app_commands.command(name="rmdailyquranchannel", description=" Removes Current Channel from receiving Daily Quran Verse")
     @discord.app_commands.describe()
     @discord.app_commands.checks.has_permissions(administrator=True)
     @discord.app_commands.guild_only()
@@ -86,15 +86,15 @@ class DailyQuran(commands.Cog):
 
         if quran_channel is not None and quran_channel == channel_id:
             self.db.drop_quran_channel_from_db(server_id)
-            embed = discord.Embed(title="Confirmation", description=f"`{channel.name}` is removed from receive daily verse", color=self.error_color, timestamp=current_time)
+            embed = discord.Embed(title="Confirmation", description=f"`{channel.name}` has been removed from receive Daily Quran Verse", color=self.confirmation_color, timestamp=current_time)
             embed.set_footer(text="Jazak Allah", icon_url=self.bot_avatar)
             await interaction.response.send_message(embed=embed)
         else:
-            embed = discord.Embed(title="Error", description=f"`{channel.name}` is not set for not receiving daily verse", color=self.error_color, timestamp=current_time)
+            embed = discord.Embed(title="Error", description=f"`{channel.name}` is already not set for receiving Daily Quran Verse", color=self.error_color, timestamp=current_time)
             embed.set_footer(text="Jazak Allah", icon_url=self.bot_avatar)
             await interaction.response.send_message(embed=embed)
             
-    @discord.app_commands.command(name="dailyquransettings", description="Shows the current setting for daily verse")
+    @discord.app_commands.command(name="dailyquransettings", description="Shows Current settings for Daily Quran Verse")
     @discord.app_commands.describe()
     async def settings(self, interaction: discord.Interaction):
         server_id = interaction.guild_id
@@ -105,9 +105,9 @@ class DailyQuran(commands.Cog):
         current_time = datetime.datetime.now(self.timezone)
         
         if server_set_times is not None:
-            set_time_formatted = server_set_times
+            set_time = server_set_times
         else:
-            set_time_formatted = "No time set"
+            set_time = "No time set"
             
         if server_set_channel is None:
             channels_text = "No channel set"
@@ -124,7 +124,7 @@ class DailyQuran(commands.Cog):
         embed.set_footer(text="Jazak Allah", icon_url=self.bot_avatar)
         embed.add_field(name="Current Set Translation:", value=f"{translation_language}", inline=False)
         embed.add_field(name="Current Set Channel:", value=f"{channels_text}", inline=False)
-        embed.add_field(name="Current Set Time:", value=f"{set_time_formatted}", inline=False)
+        embed.add_field(name="Current Set Time:", value=f"{set_time}", inline=False)
         
         await interaction.response.send_message(embed=embed)
 
@@ -169,6 +169,13 @@ class DailyQuran(commands.Cog):
                             self.db.save_last_sent_time_to_db(server_id, last_sent_date)
             
             await asyncio.sleep(60)
+
+    @set_dailyquran_channel.error
+    @set_dailyquran_time.error
+    @rm_dailyquran_channel.error
+    @settings.error
+    async def on_error(self, interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
+            await error_handler(interaction, error)
 
 async def setup(bot):
     await bot.add_cog(DailyQuran(bot))

@@ -1,11 +1,10 @@
 import discord
 import datetime
-import requests
 import random
-import pytz
 
-from data.db import DB
-from data.gui import set_timezone, bot_avatar, accent_color, confirmation_color, error_color
+from utils.errors import error_handler
+from utils.db import DB
+from utils.gui import set_timezone, bot_avatar, accent_color, confirmation_color, error_color
 from discord import app_commands
 from discord.ext import commands
 from cogs.quran import Quran
@@ -41,6 +40,10 @@ class RandomQuran(commands.Cog):
         else:
             error_embed = discord.Embed(title="Error!", description="Failed to fetch verse information.",color=self.error_color)
             await interaction.response.send_message(embed = error_embed)
+
+    @rquran.error
+    async def on_error(self, interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
+            await error_handler(interaction, error)
        
 async def setup(bot):
     await bot.add_cog(RandomQuran(bot))

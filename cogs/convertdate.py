@@ -1,7 +1,7 @@
 import discord
 import datetime
 
-from data.gui import set_timezone, bot_avatar, accent_color, confirmation_color, error_color
+from utils.gui import set_timezone, bot_avatar, accent_color, confirmation_color, error_color
 from hijridate import Hijri, Gregorian
 from discord.ext import commands
 from discord import app_commands
