@@ -61,8 +61,10 @@ class Quran(commands.Cog):
     @discord.app_commands.checks.has_permissions(administrator=True)
     @discord.app_commands.guild_only()
     async def settranslation(self, interaction: discord.Interaction, title: str):
-        server_id = interaction.guild_id
         current_time = datetime.datetime.now(self.timezone)
+
+        server_id = interaction.guild_id
+        server_name = interaction.guild.name
         
         if title.lower() not in self.translation_mapping:
             set_translation_error_embed = discord.Embed(title="Error", description=f"**Invalid translation!** Please choose from Bengali, English, Farsi, Hindi, Italian, Japanese, Malaysian, Russian, Spanish and Urdu", color=self.error_color, timestamp=current_time)
@@ -75,7 +77,7 @@ class Quran(commands.Cog):
 
         translation_language = title.capitalize()
     
-        set_translation_confirmation_embed = discord.Embed(title="Confirmation", description=f"Quran Translation set to {translation_language}", color=self.confirmation_color, timestamp=current_time)
+        set_translation_confirmation_embed = discord.Embed(title="Confirmation", description=f"The current translation for `{server_name}` has been set to {translation_language}", color=self.confirmation_color, timestamp=current_time)
         set_translation_confirmation_embed.set_footer(text="Jazak Allah", icon_url=self.bot_avatar)
         await interaction.response.send_message(embed=set_translation_confirmation_embed)
 
@@ -84,8 +86,8 @@ class Quran(commands.Cog):
     async def translation(self, interaction: discord.Interaction):
         current_time = datetime.datetime.now(self.timezone)
         
-        server_id = interaction.guild_id if interaction.guild else None
-        server_name = interaction.guild.name if interaction.guild else "this server"
+        server_id = interaction.guild_id
+        server_name = interaction.guild.name
         
         server_set_translation = self.db.load_translation_from_db(server_id)
 
