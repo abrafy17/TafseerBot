@@ -20,8 +20,8 @@ class Quran(commands.Cog):
         self.translation_mapping = translation_mapping
 
     @discord.app_commands.command(name="quran", description="Sends Verse from the Quran.")
-    @discord.app_commands.describe(verse="Enter the chapter and verse number (e.g. 1:1)")
-    async def quran(self, interaction: discord.Interaction, *, verse: str):
+    @discord.app_commands.describe(chapter= "Chapter Number (1-114)", verse="Verse Number from Entered Chapter")
+    async def quran(self, interaction: discord.Interaction, *, chapter: str, verse: str):
         #await interaction.response.defer(thinking=True)
 
         server_id = interaction.guild_id
@@ -29,19 +29,7 @@ class Quran(commands.Cog):
     
         current_time = datetime.datetime.now()
         
-        if ":" not in verse:
-            invalid_embed = discord.Embed(title = "Error!",description = "Please add ':' between Chapter and Verse, (e.g. 1:1)", color=self.error_color)
-            await interaction.response.send_message(embed=invalid_embed)
-            return
-
-        try:
-            chapter, verse = verse.split(':')
-        except ValueError:
-            error = discord.Embed(title = "Error!",description = "Failed to fetch data from the API. Please try again later", color=self.error_color)
-            await interaction.response.send_message(embed=error)
-            return
-
-        verse_info = self.bring_verse(verse, interaction.guild_id)
+        verse_info = self.bring_verse(chapter, verse, interaction.guild_id)
         if verse_info:
             translation_name_english = verse_info['translation_name_english']
             embed = discord.Embed(
@@ -100,13 +88,17 @@ class Quran(commands.Cog):
         translation_embed.set_footer(text="Jazak Allah", icon_url=self.bot_avatar)
         await interaction.response.send_message(embed=translation_embed)
 
-    def bring_verse(self, verse: int, server_id: int):
+    def bring_verse(self, chapter: int, verse: int, server_id: int):
 
         server_set_translation = self.db.load_translation_from_db(server_id)
         current_time = datetime.datetime.now(self.timezone)
 
-        url = f'http://api.alquran.cloud/ayah/{verse}/editions/quran-uthmani,{server_set_translation}'
-        print(f"At {current_time}, Invoked Random Quran Verse API URL: {url}") #for debugging
+        if chapter:
+            url = f'http://api.alquran.cloud/ayah/{chapter}:{verse}/editions/quran-uthmani,{server_set_translation}'
+        else:
+            url = f'http://api.alquran.cloud/ayah/{verse}/editions/quran-uthmani,{server_set_translation}'
+
+        print(f"At {current_time.strftime('%H:%M %p on %d-%m-%Y')}, Invoked Random Quran Verse API URL: {url}") #for debugging
         response = requests.get(url)
         
         if response.status_code != 200:

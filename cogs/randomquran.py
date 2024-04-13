@@ -26,7 +26,7 @@ class RandomQuran(commands.Cog):
         current_time = datetime.datetime.now(self.timezone)
         aya = random.randint(1, 6237)
         guild_id = interaction.guild_id
-        verse_info = self.quran_instance.bring_verse(aya, guild_id)
+        verse_info = self.quran_instance.bring_verse(None, aya, guild_id)
         if verse_info:
             translation_name_english = verse_info['translation_name_english']
             embed = discord.Embed(
