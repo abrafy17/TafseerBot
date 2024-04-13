@@ -10,7 +10,7 @@ intents = discord.Intents.all()
 
 class TafseerBot(commands.Bot):
     def __init__(self) -> None:
-        super().__init__(command_prefix='^', description=description, case_insensitive=True, intents=intents, activity = discord.Activity(type=discord.ActivityType.watching, name="/quran 🇵🇸"))
+        super().__init__(command_prefix='^', description=description, case_insensitive=True, intents=intents, activity = discord.Activity(type=discord.ActivityType.watching, name="/quran"))
         self.initial_extensions = [
             "cogs.quran",
             "cogs.randomquran",

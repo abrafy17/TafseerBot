@@ -1,21 +1,21 @@
-# tafseer.py
 import discord
 import datetime
 import requests
 import html2text
-import pytz
 
+
+from data.gui import set_timezone, bot_avatar, accent_color, confirmation_color, error_color
 from discord.ext import commands
 from discord import app_commands
 
 class Tafseer(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.bot_avatar = "https://i.postimg.cc/Dz4d7y7J/avatar.jpg"
-        self.timezone = pytz.timezone('Asia/Karachi')
-        self.accent_color = discord.Color(0x1624)
-        self.confirmation_color = discord.Color.green()
-        self.error_color = discord.Color.red()
+        self.bot_avatar = bot_avatar
+        self.timezone = set_timezone
+        self.accent_color = accent_color
+        self.confirmation_color = confirmation_color
+        self.error_color = error_color
 
     @discord.app_commands.command(name="tafseer", description="Get Tafseer of Ayah")
     @discord.app_commands.describe(verse="Enter Chapter:Verse to get Tafseer of Verse (e.g. 1:1)")

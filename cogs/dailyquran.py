@@ -1,42 +1,29 @@
 import discord
 import requests
-import pytz
 import asyncio
 import random
 import datetime
 
-from datetime import timedelta
+from data.db import DB
+from data.gui import set_timezone, bot_avatar, accent_color, confirmation_color, error_color, translation_mapping
 from discord import app_commands
 from discord.ext import commands
-from config.config import get_mysql_connection
 from cogs.quran import Quran
 
 
 class DailyQuran(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
-        self.db_connection = get_mysql_connection()
-        self.cursor = self.db_connection.cursor()
-        self.bot_avatar = "https://i.postimg.cc/Dz4d7y7J/avatar.jpg"
-        self.timezone = pytz.timezone('Asia/Karachi')
-        self.accent_color = discord.Color(0x1624)
-        self.confirmation_color = discord.Color.green()
-        self.error_color = discord.Color.red()
+        self.db = DB()
+        self.bot_avatar = bot_avatar
+        self.timezone = set_timezone
+        self.accent_color = accent_color
+        self.confirmation_color = confirmation_color
+        self.error_color = error_color
         self.quran_instance = Quran(bot)
-        self.translation_mapping = {
-            'bengali' : 'bn.bengali',
-            'english' : 'en.sahih',
-            'farsi' : 'fa.ghomshei',
-            'hindi' : 'hi.farooq',
-            'italian' : 'it.piccardo',
-            'japanese' : 'ja.japanese',
-            'malaysian' : 'my.ghazi',
-            'russian' : 'ru.kuliev-alsaadi',
-            'spanish' : 'es.garcia',
-            'urdu': 'ur.jalandhry',
-        }
+        self.translation_mapping = translation_mapping
 
-    @discord.app_commands.command(name="dailyqurantime", description="Set Time for Daily Quran Verse")
+    @discord.app_commands.command(name="setdailyqurantime", description="Set Time for Daily Quran Verse")
     @discord.app_commands.describe(hour="Hour in 24hr Format", minute="Minute")
     @discord.app_commands.checks.has_permissions(administrator=True)
     @discord.app_commands.guild_only()
@@ -50,7 +37,7 @@ class DailyQuran(commands.Cog):
             set_time = datetime.time(hour, minute)
             time = set_time.strftime('%H:%M:00')
 
-            self.save_time_to_db(server_id, time)
+            self.db.save_time_to_db(server_id, time)
             embed = discord.Embed(title="Confirmation", description=f"The Daily Quran message time has been set to: {set_time.strftime('%I:%M %p')} ({self.timezone.zone})", color=self.confirmation_color, timestamp=current_time)
             embed.set_footer(text="Jazak Allah", icon_url=self.bot_avatar)
             await interaction.response.send_message(embed=embed)
@@ -59,7 +46,7 @@ class DailyQuran(commands.Cog):
             embed.set_footer(text="Jazak Allah", icon_url=self.bot_avatar)
             await interaction.response.send_message(embed=embed)
 
-    @discord.app_commands.command(name="dailyquranchannel", description="Set current channel to receive daily  verse")
+    @discord.app_commands.command(name="setdailyquranchannel", description="Set current channel to receive daily  verse")
     @discord.app_commands.describe()
     @discord.app_commands.checks.has_permissions(administrator=True)
     @discord.app_commands.guild_only()
@@ -69,13 +56,13 @@ class DailyQuran(commands.Cog):
         channel_id = interaction.channel_id
         current_time = datetime.datetime.now(self.timezone)
         
-        quran_channel = self.load_quran_channel_from_db(server_id)
+        quran_channel = self.db.load_quran_channel_from_db(server_id)
 
         channel = self.bot.get_channel(channel_id) 
         channel_name = channel.name
 
         if quran_channel is None:
-            self.save_quran_channel_to_db(server_id, channel_id)
+            self.db.save_quran_channel_to_db(server_id, channel_id)
             embed = discord.Embed(title="Confirmation", description=f"`{channel_name}` has been added to receive Daily Quran messages", color=self.confirmation_color, timestamp=current_time)
             embed.set_footer(text="Jazak Allah", icon_url=self.bot_avatar)
             await interaction.response.send_message(embed=embed)
@@ -94,11 +81,11 @@ class DailyQuran(commands.Cog):
         channel_id = interaction.channel_id
         current_time = datetime.datetime.now(self.timezone)
 
-        quran_channel = self.load_quran_channel_from_db(server_id)
+        quran_channel = self.db.load_quran_channel_from_db(server_id)
         channel = self.bot.get_channel(channel_id)
 
         if quran_channel is not None and quran_channel == channel_id:
-            self.drop_quran_channel_from_db(server_id)
+            self.db.drop_quran_channel_from_db(server_id)
             embed = discord.Embed(title="Confirmation", description=f"`{channel.name}` is removed from receive daily verse", color=self.error_color, timestamp=current_time)
             embed.set_footer(text="Jazak Allah", icon_url=self.bot_avatar)
             await interaction.response.send_message(embed=embed)
@@ -111,9 +98,9 @@ class DailyQuran(commands.Cog):
     @discord.app_commands.describe()
     async def settings(self, interaction: discord.Interaction):
         server_id = interaction.guild_id
-        server_set_channel = self.load_quran_channel_from_db(server_id)
-        server_set_times = self.load_time_from_db(server_id)
-        server_set_translation = self.load_translation_from_db(server_id)
+        server_set_channel = self.db.load_quran_channel_from_db(server_id)
+        server_set_times = self.db.load_time_from_db(server_id)
+        server_set_translation = self.db.load_translation_from_db(server_id)
 
         current_time = datetime.datetime.now(self.timezone)
         
@@ -133,11 +120,11 @@ class DailyQuran(commands.Cog):
         else:
             translation_language = server_set_translation
         
-        embed = discord.Embed(title="Daily Quran Setting", colour=self.accent_color, timestamp=current_time)
+        embed = discord.Embed(title="Daily Quran Verse Setting", colour=self.accent_color, timestamp=current_time)
         embed.set_footer(text="Jazak Allah", icon_url=self.bot_avatar)
-        embed.add_field(name="Translation:", value=f"{translation_language}", inline=False)
-        embed.add_field(name="Channel:", value=f"{channels_text}", inline=False)
-        embed.add_field(name="Time:", value=f"{set_time_formatted}", inline=False)
+        embed.add_field(name="Current Set Translation:", value=f"{translation_language}", inline=False)
+        embed.add_field(name="Current Set Channel:", value=f"{channels_text}", inline=False)
+        embed.add_field(name="Current Set Time:", value=f"{set_time_formatted}", inline=False)
         
         await interaction.response.send_message(embed=embed)
 
@@ -165,9 +152,9 @@ class DailyQuran(commands.Cog):
             now = datetime.datetime.now(self.timezone)
             
             server_id = interaction.guild_id
-            quran_channels = self.load_quran_channel_from_db(server_id)
-            server_set_times = self.load_time_to_db(server_id)
-            last_sent_date = self.load_last_sent_time_from_db(server_id)
+            quran_channels = self.db.load_quran_channel_from_db(server_id)
+            server_set_times = self.db.load_time_to_db(server_id)
+            last_sent_date = self.db.load_last_sent_time_from_db(server_id)
 
             for server_id, set_time in server_set_times.items():
                 if now.hour == set_time.hour and now.minute == set_time.minute:
@@ -179,98 +166,9 @@ class DailyQuran(commands.Cog):
                                 await self.send_random_quran(channel, server_id)
                             
                             last_sent_date = now
-                            self.save_last_sent_time_to_db(server_id, last_sent_date)
+                            self.db.save_last_sent_time_to_db(server_id, last_sent_date)
             
             await asyncio.sleep(60)
-
-    def save_translation_to_db(self, server_id: int, translation_key: str):
-        cursor = self.db_connection.cursor()
-        sql = "REPLACE INTO translations (server_id, translation_key) VALUES (%s, %s)"
-        val = (server_id, translation_key)
-        cursor.execute(sql, val)
-        self.db_connection.commit()
-        cursor.close()
-
-    def load_translation_from_db(self, server_id: int):
-        cursor = self.db_connection.cursor()
-        sql = "SELECT translation_key FROM translations WHERE server_id = %s"
-        val = (server_id,)
-        cursor.execute(sql, val)
-        result = cursor.fetchone()
-        cursor.close()
-        if result is not None:
-            return result[0]
-        else:
-            return None
-        
-    def save_time_to_db(self, server_id: int, set_time: datetime.time):
-        cursor = self.db_connection.cursor()
-        sql = "REPLACE INTO time (server_id, set_time) VALUES (%s, %s)"
-        val = (server_id, set_time)
-        cursor.execute(sql, val)
-        self.db_connection.commit()
-        cursor.close()
-
-    def load_time_from_db(self, server_id: int):
-        cursor = self.db_connection.cursor()
-        sql = "SELECT set_time FROM time WHERE server_id = %s"
-        val = (server_id,)
-        cursor.execute(sql, val)
-        result = cursor.fetchone()
-        cursor.close()
-        if result is not None:
-            return result[0]
-        else:
-            return None
-        
-    def save_quran_channel_to_db(self, server_id: int, quran_channel: int):
-        cursor = self.db_connection.cursor()
-        sql = "REPLACE INTO channel (server_id, quran_channel) VALUES (%s, %s)"
-        val = (server_id, quran_channel)
-        cursor.execute(sql, val)
-        self.db_connection.commit()
-        cursor.close()
-
-    def drop_quran_channel_from_db(self, server_id: int):
-        cursor = self.db_connection.cursor()
-        sql = "UPDATE channel SET quran_channel = NULL WHERE server_id = %s"
-        val = (server_id,)
-        cursor.execute(sql, val)
-        self.db_connection.commit()
-        cursor.close()
-
-
-    def load_quran_channel_from_db(self, server_id: int):
-        cursor = self.db_connection.cursor()
-        sql = "SELECT quran_channel FROM channel WHERE server_id = %s"
-        val = (server_id,)
-        cursor.execute(sql, val)
-        result = cursor.fetchone()
-        cursor.close()
-        if result is not None:
-            return result[0]
-        else:
-            return None
-        
-    def save_last_sent_time_to_db(self, server_id: int, last_sent_date: datetime.datetime):
-        cursor = self.db_connection.cursor()
-        sql = "REPLACE INTO lastsent(server_id, last_sent_date) VALUES (%s, %s)"
-        val = (server_id, last_sent_date)
-        cursor.execute(sql, val)
-        self.db_connection.commit()
-        cursor.close()
-
-    def load_last_sent_time_from_db(self, server_id: int):
-        cursor = self.db_connection.cursor()
-        sql = "SELECT last_sent_date FROM lastsent WHERE server_id = %s"
-        val = (server_id,)
-        cursor.execute(sql, val)
-        result = cursor.fetchone()
-        cursor.close()
-        if result is not None:
-            return result[0]
-        else:
-            return None
 
 async def setup(bot):
     await bot.add_cog(DailyQuran(bot))

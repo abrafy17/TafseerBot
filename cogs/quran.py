@@ -1,34 +1,22 @@
 import discord
 import datetime
 import requests
-import pytz
 
+from data.db import DB
+from data.gui import set_timezone, bot_avatar, accent_color, confirmation_color, error_color, translation_mapping
 from discord import app_commands
 from discord.ext import commands
-from config.config import get_mysql_connection
 
 class Quran(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
-        self.db_connection = get_mysql_connection()
-        self.cursor = self.db_connection.cursor()
-        self.bot_avatar = "https://i.postimg.cc/Dz4d7y7J/avatar.jpg"
-        self.timezone = pytz.timezone('Asia/Karachi')
-        self.accent_color = discord.Color(0x1624)
-        self.confirmation_color = discord.Color.green()
-        self.error_color = discord.Color.red()
-        self.translation_mapping = {
-            'bengali' : 'bn.bengali',
-            'english': 'en.sahih',
-            'farsi' : 'fa.ghomshei',
-            'hindi' : 'hi.farooq',
-            'italian' : 'it.piccardo',
-            'japanese' : 'ja.japanese',
-            'malaysian' : 'my.ghazi',
-            'russian' : 'ru.kuliev-alsaadi',
-            'spanish' : 'es.garcia',
-            'urdu': 'ur.jalandhry',
-        }
+        self.db = DB()
+        self.bot_avatar = bot_avatar
+        self.timezone = set_timezone
+        self.accent_color = accent_color
+        self.confirmation_color = confirmation_color
+        self.error_color = error_color
+        self.translation_mapping = translation_mapping
 
     @discord.app_commands.command(name="quran", description="Sends Verse from the Quran.")
     @discord.app_commands.describe(verse="Enter the chapter and verse number (e.g. 1:1)")
@@ -36,7 +24,7 @@ class Quran(commands.Cog):
         #await interaction.response.defer(thinking=True)
 
         server_id = interaction.guild_id
-        translation_key = self.load_translation_from_db(server_id)
+        translation_key = self.db.load_translation_from_db(server_id)
     
         current_time = datetime.datetime.now()
         
@@ -82,7 +70,7 @@ class Quran(commands.Cog):
             return
 
         translation_key = self.translation_mapping[title.lower()]
-        self.save_translation_to_db(server_id, translation_key)
+        self.db.save_translation_to_db(server_id, translation_key)
 
         translation_language = title.capitalize()
     
@@ -98,7 +86,7 @@ class Quran(commands.Cog):
         server_id = interaction.guild_id if interaction.guild else None
         server_name = interaction.guild.name if interaction.guild else "this server"
         
-        server_set_translation = self.load_translation_from_db(server_id)
+        server_set_translation = self.db.load_translation_from_db(server_id)
 
         if server_set_translation:
             translation_language = server_set_translation
@@ -111,7 +99,7 @@ class Quran(commands.Cog):
 
     def bring_verse(self, verse: int, server_id: int):
 
-        server_set_translation = self.load_translation_from_db(server_id)
+        server_set_translation = self.db.load_translation_from_db(server_id)
         current_time = datetime.datetime.now(self.timezone)
 
         url = f'http://api.alquran.cloud/ayah/{verse}/editions/quran-uthmani,{server_set_translation}'
@@ -145,26 +133,6 @@ class Quran(commands.Cog):
             'chapter_number': chapter_number,
             'sajda_info': sajda_info
             }
-    
-    def save_translation_to_db(self, server_id: int, translation_key: str):
-        cursor = self.db_connection.cursor()
-        sql = "REPLACE INTO translations (server_id, translation_key) VALUES (%s, %s)"
-        val = (server_id, translation_key)
-        cursor.execute(sql, val)
-        self.db_connection.commit()
-        cursor.close()
-
-    def load_translation_from_db(self, server_id: int):
-        cursor = self.db_connection.cursor()
-        sql = "SELECT translation_key FROM translations WHERE server_id = %s"
-        val = (server_id,)
-        cursor.execute(sql, val)
-        result = cursor.fetchone()
-        cursor.close()
-        if result is not None:
-            return result[0]
-        else:
-            return None
     
 async def setup(bot):
     await bot.add_cog(Quran(bot))
