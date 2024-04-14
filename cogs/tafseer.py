@@ -17,12 +17,13 @@ class Tafseer(commands.Cog):
         self.error_color = error_color
 
     @discord.app_commands.command(name="tafseer", description="Get Tafseer of Ayah")
-    @discord.app_commands.describe(verse="Enter Chapter:Verse to get Tafseer of Verse (e.g. 1:1)")
-    async def tafseer(self, interaction: discord.Interaction, verse: str):
-        chapter, verse_number = verse.split(":")
+    @discord.app_commands.describe(chapter = "Chapter Number (1-114)", verse="Verse Number of Entered Chapter")
+    async def tafseer(self, interaction: discord.Interaction, chapter:str, verse: str):
+        chapter_number = chapter
+        verse_number = verse
         current_time = datetime.datetime.now(self.timezone)
-        url = f"https://api.quran.com/api/v4/tafsirs/169/by_ayah/{chapter}:{verse_number}"
-        print(f"At {current_time}, Invoked Random Quran Verse API URL: {url}")  # for debugging
+        url = f"https://api.quran.com/api/v4/tafsirs/169/by_ayah/{chapter_number}:{verse_number}"
+        print(f"At {current_time.strftime('%H:%M %p on %d-%m-%Y')}, Invoked Random Quran Verse API URL: {url}")  # for debugging
         response = requests.get(url)
         data = response.json()
 
