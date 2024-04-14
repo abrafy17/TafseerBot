@@ -59,15 +59,17 @@ class Quran(commands.Cog):
             set_translation_error_embed.set_footer(text="Jazak Allah", icon_url=self.bot_avatar)
             await interaction.response.send_message(embed=set_translation_error_embed)
             return
+        
+        else:
 
-        translation_key = self.translation_mapping[title.lower()]
-        self.db.save_translation_to_db(server_id, translation_key)
+            translation_key = self.translation_mapping[title.lower()]
+            self.db.save_translation_to_db(server_id, translation_key)
 
-        translation_language = title.capitalize()
-    
-        set_translation_confirmation_embed = discord.Embed(title="Confirmation", description=f"The current translation for `{server_name}` has been set to {translation_language}", color=self.confirmation_color, timestamp=current_time)
-        set_translation_confirmation_embed.set_footer(text="Jazak Allah", icon_url=self.bot_avatar)
-        await interaction.response.send_message(embed=set_translation_confirmation_embed)
+            translation_language = title.capitalize()
+        
+            set_translation_confirmation_embed = discord.Embed(title="Confirmation", description=f"The current translation for `{server_name}` has been set to {translation_language}", color=self.confirmation_color, timestamp=current_time)
+            set_translation_confirmation_embed.set_footer(text="Jazak Allah", icon_url=self.bot_avatar)
+            await interaction.response.send_message(embed=set_translation_confirmation_embed)
 
     @discord.app_commands.command(name="translation", description="Current Translation for Quran Verse")
     @discord.app_commands.describe()
