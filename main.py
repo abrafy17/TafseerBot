@@ -1,9 +1,14 @@
 import discord
+import configparser
 
 from discord.ext import commands
-from config.config import TOKEN
+from cogs.dailyquran import DailyQuran
 
-token = TOKEN
+config = configparser.ConfigParser()
+config.read('config.ini')
+
+token = config['TafseerBot']['token']
+
 description = "TafseerBot"
 
 intents = discord.Intents.all()
@@ -11,6 +16,7 @@ intents = discord.Intents.all()
 class TafseerBot(commands.Bot):
     def __init__(self) -> None:
         super().__init__(command_prefix='^', description=description, case_insensitive=True, intents=intents, activity = discord.Activity(type=discord.ActivityType.watching, name="/help"))
+        self.dailyquran_cog = DailyQuran(self)
         self.initial_extensions = [
             "cogs.quran",
             "cogs.randomquran",

@@ -4,4 +4,4 @@ asyncio
 pytz
 html2text
 hijridate
-mysql-connector-python
+aiomysql

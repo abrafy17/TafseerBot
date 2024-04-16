@@ -3,12 +3,10 @@ import datetime
 import random
 
 from utils.errors import error_handler
-from utils.db import DB
+from utils.fetchquran import FetchQuran
 from utils.gui import set_timezone, bot_avatar, accent_color, confirmation_color, error_color
 from discord import app_commands
 from discord.ext import commands
-from cogs.quran import Quran
-
 
 class RandomQuran(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
@@ -18,15 +16,18 @@ class RandomQuran(commands.Cog):
         self.accent_color = accent_color
         self.confirmation_color = confirmation_color
         self.error_color = error_color
-        self.quran_instance = Quran(bot)
+        self.fetch_quran = FetchQuran()
 
     @discord.app_commands.command(name="rquran", description="Sends Random Verse from the Quran")
     @discord.app_commands.describe()
     async def rquran(self, interaction: discord.Interaction):
+        await interaction.response.defer(thinking=True)
         current_time = datetime.datetime.now(self.timezone)
-        aya = random.randint(1, 6237)
-        guild_id = interaction.guild_id
-        verse_info = self.quran_instance.bring_verse(chapter=None, verse=aya, server_id=guild_id)
+        random_verse = random.randint(1, 6237)
+
+        server_id = interaction.guild_id
+        verse_info = await self.fetch_quran.fetch_quran(server_id=server_id, chapter=None, verse=random_verse)
+
         if verse_info:
             translation_name_english = verse_info['translation_name_english']
             embed = discord.Embed(
@@ -36,11 +37,11 @@ class RandomQuran(commands.Cog):
             
             embed.set_footer(text=f"Translation by: {translation_name_english}", icon_url=self.bot_avatar)
             
-            await interaction.response.send_message(embed=embed)
+            await interaction.followup.send(embed=embed)
         else:
             error_embed = discord.Embed(title="Error!", description="Failed to fetch verse information.",color=self.error_color)
-            await interaction.response.send_message(embed = error_embed)
-
+            await interaction.followup.send(embed = error_embed)
+    
     @rquran.error
     async def on_error(self, interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
             await error_handler(interaction, error)
