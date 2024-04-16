@@ -24,9 +24,11 @@ Join Discord: https://discord.gg/tQaHnpnwXy
 ## Setup
 
 Clone the repository:
+
 `git clone https://github.com/yourusername/TafseerBot.git`
 
 Install dependencies:
+
 `pip install -r requirements.txt`
 
 Set up a Discord bot and obtain the token.
@@ -34,12 +36,14 @@ Create a config.ini file in the root directory and add your bot token and databa
 
 
 Run the bot:
+
 `python3 main.py`
 
 
 ## Usage
 
-Invite the bot to your Discord server.
+#### Invite the bot to your Discord server.
+
 Use slash commands (/quran, /rquran, /tafseer, /convertdate) to interact with the bot.
 Set channel using the /setdailyquranchannel command to receive daily quranic verse.
 and
@@ -51,17 +55,17 @@ you can use /rmdailyquranchannel command to stop channel from receiving daily qu
 
 Contributions are welcome! If you have suggestions or want to contribute to the project, follow these steps:
 
-Fork the repository.
+### Fork the repository.
 
-Create a new branch (`git checkout -b feature/yourfeature`).
+Create a new branch: `git checkout -b feature/yourfeature`
 
-Make your changes.
+### Make your changes.
 
-Commit your changes (`git commit -am 'Add new feature'`).
+Commit your changes: `git commit -am 'Add new feature'`
 
-Push to the branch (`git push origin feature/yourfeature`).
+Push to the branch: `git push origin feature/yourfeature`
 
-Create a new Pull Request.
+### Create a new Pull Request.
 
 ## License
 
