@@ -34,9 +34,10 @@ class TafseerBot(commands.Bot):
     async def on_ready(self):
         print(f'Logged in as {self.user.name} ({self.user.id}) on {len(self.guilds)} servers')
         synced = await self.tree.sync()
-        #await bot.tree.sync(guild=None)
+        await bot.tree.sync(guild=None)
         await self.setup_hook()
         print("Slash CMDs Synced " + str(len(synced)) + " commands")
-
+        await self.dailyquran_cog.dailyquran()
+        
 bot = TafseerBot()
 bot.run(token)

@@ -44,7 +44,7 @@ class Quran(commands.Cog):
             error_embed = discord.Embed(title="Error!", description="Failed to fetch verse information.",color=self.error_color)
             await interaction.followup.send(embed = error_embed)
         
-    @discord.app_commands.command(name = "settranslation", description = "Set Translation for Quran Verse")
+    @discord.app_commands.command(name = "settranslation", description = "Set Translation for Quranic Verse")
     @discord.app_commands.describe(title = "Enter the name of translation bengali, farsi, hindi, italian, japanese, malaysian, russian, spanish, urdu")
     @discord.app_commands.checks.has_permissions(administrator=True)
     @discord.app_commands.guild_only()
@@ -73,7 +73,7 @@ class Quran(commands.Cog):
             set_translation_confirmation_embed.set_footer(text="Jazak Allah", icon_url=self.bot_avatar)
             await interaction.followup.send(embed=set_translation_confirmation_embed)
 
-    @discord.app_commands.command(name="translation", description="Current Translation for Quran Verse")
+    @discord.app_commands.command(name="translation", description="Current Translation for Quranic Verse")
     @discord.app_commands.describe()
     async def translation(self, interaction: discord.Interaction):
         await interaction.response.defer(thinking=True)

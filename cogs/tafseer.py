@@ -4,6 +4,7 @@ import requests
 import html2text
 
 from utils.gui import set_timezone, bot_avatar, accent_color, confirmation_color, error_color
+from utils.errors import error_handler
 from discord.ext import commands
 from discord import app_commands
 
@@ -63,6 +64,10 @@ class Tafseer(commands.Cog):
         else:
             error_embed = discord.Embed(title="Error", description="Failed to fetch tafseer data.", color=self.error_color)
             await interaction.response.send_message(embed=error_embed)
+            
+    @tafseer.error
+    async def on_error(self, interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
+            await error_handler(interaction, error)
 
 async def setup(bot):
     await bot.add_cog(Tafseer(bot))

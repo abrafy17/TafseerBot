@@ -22,8 +22,9 @@ class DailyQuran(commands.Cog):
         self.error_color = error_color
         self.translation_mapping = translation_mapping
         self.fetchquran = FetchQuran()
+        #self.dailyquran.start()
 
-    @discord.app_commands.command(name="setdailyqurantime", description="Set Time for Daily Quran Verse")
+    @discord.app_commands.command(name="setdailyqurantime", description="Set Time for Daily Quran")
     @discord.app_commands.describe(hour="Hour in 24hr Format", minute="Minute")
     @discord.app_commands.checks.has_permissions(administrator=True)
     @discord.app_commands.guild_only()
@@ -38,7 +39,7 @@ class DailyQuran(commands.Cog):
                 time = set_time.strftime('%H:%M')
 
                 await servertime.save(time)
-                embed = discord.Embed(title="Confirmation", description=f"The Daily Quran Verse time has been set to: {set_time.strftime('%I:%M %p')}", color=self.confirmation_color, timestamp=current_time)
+                embed = discord.Embed(title="Confirmation", description=f"The Daily Quran time has been set to: {set_time.strftime('%I:%M %p')}", color=self.confirmation_color, timestamp=current_time)
                 embed.set_footer(text="Jazak Allah", icon_url=self.bot_avatar)
                 await interaction.response.send_message(embed=embed)
         except ValueError:
@@ -46,7 +47,7 @@ class DailyQuran(commands.Cog):
                 embed.set_footer(text="Jazak Allah", icon_url=self.bot_avatar)
                 await interaction.response.send_message(embed=embed)
 
-    @discord.app_commands.command(name="setdailyquranchannel", description="Set Current Channel for Receiving Daily Quran Verse")
+    @discord.app_commands.command(name="setdailyquranchannel", description="Set Current Channel for Receiving Daily Quran")
     @discord.app_commands.describe()
     @discord.app_commands.checks.has_permissions(administrator=True)
     @discord.app_commands.guild_only()
@@ -71,7 +72,7 @@ class DailyQuran(commands.Cog):
             embed.set_footer(text="Jazak Allah", icon_url=self.bot_avatar)
             await interaction.response.send_message(embed=embed)
 
-    @discord.app_commands.command(name="rmdailyquranchannel", description=" Removes Current Channel from receiving Daily Quran Verse")
+    @discord.app_commands.command(name="rmdailyquranchannel", description=" Removes Current Channel from receiving Daily Quran")
     @discord.app_commands.describe()
     @discord.app_commands.checks.has_permissions(administrator=True)
     @discord.app_commands.guild_only()
@@ -95,7 +96,7 @@ class DailyQuran(commands.Cog):
             embed.set_footer(text="Jazak Allah", icon_url=self.bot_avatar)
             await interaction.response.send_message(embed=embed)
             
-    @discord.app_commands.command(name="dailyquransettings", description="Shows Current settings for Daily Quran Verse")
+    @discord.app_commands.command(name="dailyquransettings", description="Shows Current settings for Daily Quran")
     @discord.app_commands.describe()
     async def settings(self, interaction: discord.Interaction):
         await interaction.response.defer(thinking=True)
@@ -131,13 +132,65 @@ class DailyQuran(commands.Cog):
             translation_language = server_set_translation
             translation_name = reverse_translation_mapping.get(translation_language, "English").capitalize()
 
-        embed = discord.Embed(title="Daily Quran Setting", colour=self.accent_color, timestamp=current_time)
+        embed = discord.Embed(title="Daily Quran Settings", colour=self.accent_color, timestamp=current_time)
         embed.set_footer(text="Jazak Allah", icon_url=self.bot_avatar)
         embed.add_field(name="Current Set Translation:", value=f"{translation_name}", inline=False)
         embed.add_field(name="Current Set Channel:", value=f"`{channels_text}`", inline=False)
         embed.add_field(name="Current Set Time:", value=f"{time}", inline=False)
 
         await interaction.followup.send(embed=embed)
+
+    async def send_random_quran(self, interaction: discord.Interaction, channel, server_id):
+        random_verse = random.randint(1, 6237)
+        verse_info = await self.fetchquran.fetch_quran(server_id=server_id, chapter=None, verse=random_verse)
+        
+        if verse_info:
+            current_time = datetime.datetime.now(self.timezone)
+            translation_name_english = verse_info['translation_name_english']
+            embed = discord.Embed(
+                title=f"Surah {verse_info['surah_name']} - {verse_info['surah_name_english']}",
+                description=f"({verse_info['chapter_number']}:{verse_info['number_in_surah']}) \n\n{verse_info['verse_arabic']}\n\n**Translation:**\n{verse_info['verse_translation']}\n\n{verse_info['sajda_info']}",
+                color=self.accent_color, timestamp=current_time)
+
+            embed.set_footer(text=f"Translation by: {translation_name_english}", icon_url=self.bot_avatar)
+
+            await channel.send(embed=embed)
+        else:
+            error_embed = discord.Embed(title="Error!", description="Failed to fetch verse information.", color=self.error_color)
+            await channel.send(embed = error_embed)
+
+    async def dailyquran(self):
+        while True:
+            now = datetime.datetime.now(self.timezone)
+
+            interactions = []
+            async for guild in self.bot.fetch_guilds(limit=None):
+                interactions.append(guild)
+
+            for interaction in interactions:
+                server_id = interaction.id 
+        
+                server_time = DailyQuranTime(server_id)
+                server_channel = DailyQuranChannel(server_id)
+
+                channel_id = await server_channel.load()
+                channel = self.bot.get_channel(channel_id)
+                set_time_str = await server_time.load()
+
+                if channel is not None and set_time_str and set_time_str.strip():
+                    hours, minutes = map(int, set_time_str.split(':'))
+                    set_time_datetime = now.replace(hour=hours, minute=minutes, second=0, microsecond=0)
+
+                    current_time_formatted = now.strftime("%H:%M")
+                    set_time_formatted = set_time_datetime.strftime("%H:%M")
+
+                    if current_time_formatted == set_time_formatted:
+                        await self.send_random_quran(interaction= discord.Interaction, channel= channel, server_id= server_id)
+                else:
+                    print(f"Time is: {now.strftime('%I:%M %p, %d-%m-%Y')}")
+
+            await asyncio.sleep(60 - now.second)
+
 
     @set_dailyquran_channel.error
     @set_dailyquran_time.error
