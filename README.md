@@ -4,11 +4,13 @@ TafseerBot is a Discord bot built with Discord.py that provides Quranic ayahs, t
 
 ## Features
 
-- **/quran**: Get specific Quranic ayahs and translations.
-- **/rquran**: Get a random Quranic ayah and its translation.
-- **/tafseer**: Get detailed tafseer for specific ayahs.
+- **/quran**: Get specific Quranic verse and translation.
+- **/rquran**: Get a random Quranic verse and its translation.
+- **/tafseer**: Get detailed tafseer for specific verse.
 - **/convertdate**: Change Gregorian date to Hijri.
-- **/setrqchannel**: Set channels to receive daily Quranic verses.
+- **/setdailyquranchannel**: Set channels to receive daily Quranic verse.
+- **/setdailyqurantime**: Set time at which to receive daily Quranic verse.
+- **/help**: Use help to see all the commands and their usage.
 
 ## Invite to Your Server
 If you just want to Invite already setup Bot to your server.
@@ -17,7 +19,7 @@ Use this link: [INVITE](https://discord.com/oauth2/authorize?client_id=120103680
 
 ## Discord
 
-~~Join Discord: https://discord.gg/wPjaYM4sU5~~
+Join Discord: https://discord.gg/tQaHnpnwXy
 ## Setup
 
 Clone the repository:
@@ -29,9 +31,7 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 Set up a Discord bot and obtain the token.
-Create a .env file in the root directory and add your bot token:
-```
-token=your_discord_bot_token
+Create a config.ini file in the root directory and add your bot token and database credentials:
 ```
 Run the bot:
 ```
@@ -41,7 +41,11 @@ Usage
 
 Invite the bot to your Discord server.
 Use slash commands (/quran, /rquran, /tafseer, /convertdate) to interact with the bot.
-Set channels using the /setrqchannel command to receive daily verses.
+Set channel using the /setdailyquranchannel command to receive daily quranic verse.
+and
+Set time using the /setdailyqurantime command to set time at which set channel will receive quranic verse.
+
+you can use /rmdailyquranchannel command to stop channel from receiving daily quranic verse.
 
 Contributing
 
