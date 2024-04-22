@@ -149,7 +149,7 @@ class DailyQuran(commands.Cog):
             translation_name_english = verse_info['translation_name_english']
             embed = discord.Embed(
                 title=f"Surah {verse_info['surah_name']} - {verse_info['surah_name_english']}",
-                description=f"({verse_info['chapter_number']}:{verse_info['number_in_surah']}) \n\n{verse_info['verse_arabic']}\n\n**Translation:**\n{verse_info['verse_translation']}\n\n{verse_info['sajda_info']}",
+                description=f"Al Quran {verse_info['chapter_number']}:{verse_info['number_in_surah']} \n\n{verse_info['verse_arabic']}\n\n**Translation:**\n{verse_info['verse_translation']}\n\n{verse_info['sajda_info']}",
                 color=self.accent_color, timestamp=current_time)
 
             embed.set_footer(text=f"Translation by: {translation_name_english}", icon_url=self.bot_avatar)
