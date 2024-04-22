@@ -2,7 +2,7 @@ import requests
 import datetime
 
 from utils.gui import set_timezone
-from utils.database import ServerSetTransaltion
+from utils.database import ServerSetTranslation
 
 set_timezone = set_timezone
 
@@ -10,7 +10,7 @@ set_timezone = set_timezone
 class FetchQuran:
     async def fetch_quran(self, server_id: int, verse: int, chapter: int=None):
                 
-            servertranslation = ServerSetTransaltion(server_id)
+            servertranslation = ServerSetTranslation(server_id)
             translation_key = await servertranslation.load()
             current_time = datetime.datetime.now(set_timezone)
 

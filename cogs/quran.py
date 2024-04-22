@@ -4,7 +4,7 @@ import requests
 
 from utils.errors import error_handler
 from utils.fetchquran import FetchQuran
-from utils.database import ServerSetTransaltion
+from utils.database import ServerSetTranslation
 from utils.gui import set_timezone, bot_avatar, accent_color, confirmation_color, error_color, translation_mapping
 from discord import app_commands
 from discord.ext import commands
@@ -54,7 +54,7 @@ class Quran(commands.Cog):
 
         server_id = interaction.guild_id
         server_name = interaction.guild.name
-        servertranslation = ServerSetTransaltion(server_id)
+        servertranslation = ServerSetTranslation(server_id)
 
         if title.lower() not in self.translation_mapping:
             set_translation_error_embed = discord.Embed(title="Error", description=f"**Invalid translation!** Please choose from Bengali, English, Farsi, Hindi, Italian, Japanese, Malaysian, Russian, Spanish and Urdu", color=self.error_color, timestamp=current_time)
@@ -81,7 +81,7 @@ class Quran(commands.Cog):
         
         server_id = interaction.guild_id
         server_name = interaction.guild.name
-        servertranslation = ServerSetTransaltion(server_id)
+        servertranslation = ServerSetTranslation(server_id)
         
         server_set_translation = await servertranslation.load()
 

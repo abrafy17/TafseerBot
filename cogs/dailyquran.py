@@ -5,7 +5,7 @@ import random
 import datetime
 
 from utils.fetchquran import FetchQuran
-from utils.database import DailyQuranTime, DailyQuranChannel, ServerSetTransaltion
+from utils.database import DailyQuranTime, DailyQuranChannel, ServerSetTranslation
 from utils.errors import error_handler
 from utils.gui import set_timezone, bot_avatar, accent_color, confirmation_color, error_color, translation_mapping
 from discord import app_commands
@@ -103,7 +103,7 @@ class DailyQuran(commands.Cog):
 
         server_id = interaction.guild_id
 
-        server_translation = ServerSetTransaltion(server_id)
+        server_translation = ServerSetTranslation(server_id)
         server_time = DailyQuranTime(server_id)
         server_channel = DailyQuranChannel(server_id)
 

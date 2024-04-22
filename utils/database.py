@@ -66,7 +66,7 @@ class DBHandler:
             await cursor.execute(delete_sql, self.key)
             connection.close() 
 
-class ServerSetTransaltion(DBHandler):
+class ServerSetTranslation(DBHandler):
     def __init__(self, server_id: int):
         super().__init__(
             table_name=config['MySQL']['server_translations_table_name'],
